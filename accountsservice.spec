@@ -4,7 +4,7 @@
 #
 Name     : accountsservice
 Version  : 0.6.45
-Release  : 2
+Release  : 3
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Summary  : Client Library for communicating with accounts service
@@ -16,20 +16,29 @@ Requires: accountsservice-bin
 Requires: accountsservice-data
 Requires: accountsservice-doc
 Requires: accountsservice-locales
+BuildRequires : automake
+BuildRequires : automake-dev
 BuildRequires : docbook-xml
 BuildRequires : gettext
-BuildRequires : gobject-introspection-dev
+BuildRequires : gettext-bin
 BuildRequires : gtk-doc
 BuildRequires : gtk-doc-dev
 BuildRequires : intltool
+BuildRequires : intltool-dev
+BuildRequires : libtool
+BuildRequires : libtool-dev
 BuildRequires : libxml2-dev
 BuildRequires : libxslt-bin
+BuildRequires : m4
 BuildRequires : perl(XML::Parser)
+BuildRequires : pkg-config-dev
 BuildRequires : pkgconfig(gio-2.0)
 BuildRequires : pkgconfig(gio-unix-2.0)
+BuildRequires : pkgconfig(gobject-introspection-1.0)
 BuildRequires : pkgconfig(libsystemd)
 BuildRequires : pkgconfig(polkit-gobject-1)
 BuildRequires : xmlto
+Patch1: 0001-data-Use-the-stateless-dbus-1-system.d-directory.patch
 
 %description
 Overview
@@ -104,11 +113,12 @@ locales components for the accountsservice package.
 
 %prep
 %setup -q -n accountsservice-0.6.45
+%patch1 -p1
 
 %build
 export LANG=C
-export SOURCE_DATE_EPOCH=1490648691
-%configure --disable-static
+export SOURCE_DATE_EPOCH=1491234093
+%reconfigure --disable-static
 make V=1  %{?_smp_mflags}
 
 %check
@@ -119,7 +129,7 @@ export no_proxy=localhost
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1490648691
+export SOURCE_DATE_EPOCH=1491234093
 rm -rf %{buildroot}
 %make_install
 %find_lang accounts-service
@@ -140,6 +150,7 @@ rm -rf %{buildroot}
 /usr/share/dbus-1/interfaces/org.freedesktop.Accounts.User.xml
 /usr/share/dbus-1/interfaces/org.freedesktop.Accounts.xml
 /usr/share/dbus-1/system-services/org.freedesktop.Accounts.service
+/usr/share/dbus-1/system.d/org.freedesktop.Accounts.conf
 /usr/share/polkit-1/actions/org.freedesktop.accounts.policy
 
 %files dev
