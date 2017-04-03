@@ -1,0 +1,26 @@
+From 343d9987c45966c0a60edc118f11f15b92463163 Mon Sep 17 00:00:00 2001
+From: Ikey Doherty <michael.i.doherty@intel.com>
+Date: Mon, 3 Apr 2017 16:34:29 +0100
+Subject: [PATCH] data: Use the stateless dbus-1 system.d directory
+
+Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
+---
+ data/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/Makefile.am b/data/Makefile.am
+index 521c6c2..45b9b6e 100644
+--- a/data/Makefile.am
++++ b/data/Makefile.am
+@@ -4,7 +4,7 @@ dbusif_DATA = \
+ 	org.freedesktop.Accounts.xml 		\
+ 	org.freedesktop.Accounts.User.xml
+ 
+-dbusconfdir   = $(sysconfdir)/dbus-1/system.d
++dbusconfdir   = $(datadir)/dbus-1/system.d
+ dbusconf_DATA = org.freedesktop.Accounts.conf
+ 
+ servicedir       = $(datadir)/dbus-1/system-services
+-- 
+2.12.2
+
