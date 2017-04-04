@@ -4,16 +4,16 @@
 #
 Name     : accountsservice
 Version  : 0.6.45
-Release  : 3
+Release  : 4
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Summary  : Client Library for communicating with accounts service
 Group    : Development/Tools
 License  : GPL-3.0
 Requires: accountsservice-config
+Requires: accountsservice-data
 Requires: accountsservice-lib
 Requires: accountsservice-bin
-Requires: accountsservice-data
 Requires: accountsservice-doc
 Requires: accountsservice-locales
 BuildRequires : automake
@@ -117,7 +117,7 @@ locales components for the accountsservice package.
 
 %build
 export LANG=C
-export SOURCE_DATE_EPOCH=1491234093
+export SOURCE_DATE_EPOCH=1491312536
 %reconfigure --disable-static
 make V=1  %{?_smp_mflags}
 
@@ -129,7 +129,7 @@ export no_proxy=localhost
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1491234093
+export SOURCE_DATE_EPOCH=1491312536
 rm -rf %{buildroot}
 %make_install
 %find_lang accounts-service
@@ -147,10 +147,12 @@ rm -rf %{buildroot}
 
 %files data
 %defattr(-,root,root,-)
+/usr/lib64/girepository-1.0/AccountsService-1.0.typelib
 /usr/share/dbus-1/interfaces/org.freedesktop.Accounts.User.xml
 /usr/share/dbus-1/interfaces/org.freedesktop.Accounts.xml
 /usr/share/dbus-1/system-services/org.freedesktop.Accounts.service
 /usr/share/dbus-1/system.d/org.freedesktop.Accounts.conf
+/usr/share/gir-1.0/*.gir
 /usr/share/polkit-1/actions/org.freedesktop.accounts.policy
 
 %files dev
@@ -159,10 +161,8 @@ rm -rf %{buildroot}
 /usr/include/accountsservice-1.0/act/act-user-manager.h
 /usr/include/accountsservice-1.0/act/act-user.h
 /usr/include/accountsservice-1.0/act/act.h
-/usr/lib64/girepository-1.0/AccountsService-1.0.typelib
 /usr/lib64/libaccountsservice.so
 /usr/lib64/pkgconfig/accountsservice.pc
-/usr/share/gir-1.0/*.gir
 
 %files doc
 %defattr(-,root,root,-)
