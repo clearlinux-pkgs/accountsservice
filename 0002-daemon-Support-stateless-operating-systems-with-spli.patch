@@ -1,0 +1,205 @@
+From a399a19daed260df2cd0f7a8c928b76d4ef6d344 Mon Sep 17 00:00:00 2001
+From: Ikey Doherty <michael.i.doherty@intel.com>
+Date: Thu, 20 Apr 2017 17:07:21 +0100
+Subject: [PATCH 2/2] daemon: Support stateless operating systems with split
+ passwd/shadow
+
+On certain operating systems, such as the Clear Linux Project for Intel
+Architecture, the shadow/passwd configuration is stateless by default.
+Thus, if the entries do not exist in the typical /etc/ files, we must
+also look them up in the system records in /usr/share/defaults/etc,
+for the users/groups defined by the stateless policy.
+
+Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
+---
+ src/daemon.c | 68 ++++++++++++++++++++++++++++++++++++++++++++++++------------
+ 1 file changed, 55 insertions(+), 13 deletions(-)
+
+diff --git a/src/daemon.c b/src/daemon.c
+index 312394a..007b777 100644
+--- a/src/daemon.c
++++ b/src/daemon.c
+@@ -48,11 +48,21 @@
+ #include "daemon.h"
+ #include "util.h"
+ 
++/**
++ * Non-stateless (user) entries
++ */
+ #define PATH_PASSWD "/etc/passwd"
+ #define PATH_SHADOW "/etc/shadow"
+ #define PATH_GROUP "/etc/group"
+ #define PATH_GDM_CUSTOM "/etc/gdm/custom.conf"
+ 
++/**
++ * Stateless (vendor) entries
++ */
++#define PATH_ALT_PASSWD "/usr/share/defaults/etc/passwd"
++#define PATH_ALT_SHADOW "/usr/share/defautls/etc/shadow"
++#define PATH_ALT_GROUP "/etc/group"
++
+ enum {
+         PROP_0,
+         PROP_DAEMON_VERSION
+@@ -66,12 +76,18 @@ struct DaemonPrivate {
+ 
+         User *autologin;
+ 
++        /* Non-stateless */
+         GFileMonitor *passwd_monitor;
+         GFileMonitor *shadow_monitor;
+         GFileMonitor *group_monitor;
+         GFileMonitor *gdm_monitor;
+         GFileMonitor *wtmp_monitor;
+ 
++        /* Stateless */
++        GFileMonitor *alt_passwd_monitor;
++        GFileMonitor *alt_shadow_monitor;
++        GFileMonitor *alt_group_monitor;
++
+         guint reload_id;
+         guint autologin_id;
+ 
+@@ -79,7 +95,7 @@ struct DaemonPrivate {
+         GHashTable *extension_ifaces;
+ };
+ 
+-typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry);
++typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file);
+ 
+ static void daemon_accounts_accounts_iface_init (AccountsAccountsIface *iface);
+ 
+@@ -144,7 +160,9 @@ static struct passwd *
+ entry_generator_fgetpwent (Daemon       *daemon,
+                            GHashTable   *users,
+                            gpointer     *state,
+-                           struct spwd **spent)
++                           struct spwd **spent,
++                           const gchar *pwfile,
++                           const gchar *shadow_file)
+ {
+         struct passwd *pwent;
+ 
+@@ -164,9 +182,9 @@ entry_generator_fgetpwent (Daemon       *daemon,
+                 FILE *fp;
+                 struct spwd *shadow_entry;
+ 
+-                fp = fopen (PATH_SHADOW, "r");
++                fp = fopen (shadow_file, "r");
+                 if (fp == NULL) {
+-                        g_warning ("Unable to open %s: %s", PATH_SHADOW, g_strerror (errno));
++                        g_warning ("Unable to open %s: %s", shadow_file, g_strerror (errno));
+                         return NULL;
+                 }
+ 
+@@ -196,10 +214,10 @@ entry_generator_fgetpwent (Daemon       *daemon,
+                         return NULL;
+                 }
+ 
+-                fp = fopen (PATH_PASSWD, "r");
++                fp = fopen (pwfile, "r");
+                 if (fp == NULL) {
+                         g_clear_pointer (&shadow_users, g_hash_table_unref);
+-                        g_warning ("Unable to open %s: %s", PATH_PASSWD, g_strerror (errno));
++                        g_warning ("Unable to open %s: %s", pwfile, g_strerror (errno));
+                         return NULL;
+                 }
+ 
+@@ -238,7 +256,9 @@ static struct passwd *
+ entry_generator_cachedir (Daemon       *daemon,
+                           GHashTable   *users,
+                           gpointer     *state,
+-                          struct spwd **shadow_entry)
++                          struct spwd **shadow_entry,
++                          __attribute__((unused)) const gchar *pwfile,
++                          __attribute__((unused)) const gchar *shadow_file)
+ {
+         struct passwd *pwent;
+         const gchar *name;
+@@ -312,7 +332,9 @@ static struct passwd *
+ entry_generator_requested_users (Daemon       *daemon,
+                                  GHashTable   *users,
+                                  gpointer     *state,
+-                                 struct spwd **shadow_entry)
++                                 struct spwd **shadow_entry,
++                                 __attribute__((unused)) const gchar *pwfile,
++                                 __attribute__((unused)) const gchar *shadow_file)
+ {
+         struct passwd *pwent;
+         GList *node;
+@@ -357,7 +379,9 @@ static void
+ load_entries (Daemon             *daemon,
+               GHashTable         *users,
+               gboolean            allow_system_users,
+-              EntryGeneratorFunc  entry_generator)
++              EntryGeneratorFunc  entry_generator,
++              const gchar *pwfile,
++              const gchar *shadow_file)
+ {
+         gpointer generator_state = NULL;
+         struct passwd *pwent;
+@@ -368,7 +392,7 @@ load_entries (Daemon             *daemon,
+ 
+         for (;;) {
+                 spent = NULL;
+-                pwent = entry_generator (daemon, users, &generator_state, &spent);
++                pwent = entry_generator (daemon, users, &generator_state, &spent, pwfile, shadow_file);
+                 if (pwent == NULL)
+                         break;
+ 
+@@ -431,17 +455,21 @@ reload_users (Daemon *daemon)
+          */
+ 
+         /* Load the local users into our hash table */
+-        load_entries (daemon, users, FALSE, entry_generator_fgetpwent);
++        load_entries (daemon, users, FALSE, entry_generator_fgetpwent, PATH_PASSWD, PATH_SHADOW);
++
++        /* Load stateless users next as they may be overriden already by /etc/passwd so skipped */
++        load_entries (daemon, users, FALSE, entry_generator_fgetpwent, PATH_ALT_PASSWD, PATH_ALT_SHADOW);
++
+         local = g_hash_table_new (g_str_hash, g_str_equal);
+         g_hash_table_iter_init (&iter, users);
+         while (g_hash_table_iter_next (&iter, &name, NULL))
+                 g_hash_table_add (local, name);
+ 
+         /* and add users to hash table that were explicitly requested  */
+-        load_entries (daemon, users, TRUE, entry_generator_requested_users);
++        load_entries (daemon, users, TRUE, entry_generator_requested_users, NULL, NULL);
+ 
+         /* Now add/update users from other sources, possibly non-local */
+-        load_entries (daemon, users, FALSE, entry_generator_cachedir);
++        load_entries (daemon, users, FALSE, entry_generator_cachedir, NULL, NULL);
+ 
+         wtmp_helper_update_login_frequencies (users);
+ 
+@@ -649,6 +677,7 @@ daemon_init (Daemon *daemon)
+ 
+         daemon->priv->users = create_users_hash_table ();
+ 
++        /* Non-stateless users */
+         daemon->priv->passwd_monitor = setup_monitor (daemon,
+                                                       PATH_PASSWD,
+                                                       on_users_monitor_changed);
+@@ -666,6 +695,19 @@ daemon_init (Daemon *daemon)
+         daemon->priv->gdm_monitor = setup_monitor (daemon,
+                                                    PATH_GDM_CUSTOM,
+                                                    on_gdm_monitor_changed);
++
++
++        /* Stateless users */
++        daemon->priv->alt_passwd_monitor = setup_monitor (daemon,
++                                                          PATH_PASSWD,
++                                                          on_users_monitor_changed);
++        daemon->priv->alt_shadow_monitor = setup_monitor (daemon,
++                                                          PATH_SHADOW,
++                                                          on_users_monitor_changed);
++        daemon->priv->alt_group_monitor = setup_monitor (daemon,
++                                                         PATH_GROUP,
++                                                         on_users_monitor_changed);
++
+         reload_users_timeout (daemon);
+         queue_reload_autologin (daemon);
+ }
+-- 
+2.12.2
+

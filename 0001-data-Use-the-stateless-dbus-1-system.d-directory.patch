@@ -1,7 +1,7 @@
 From 343d9987c45966c0a60edc118f11f15b92463163 Mon Sep 17 00:00:00 2001
 From: Ikey Doherty <michael.i.doherty@intel.com>
 Date: Mon, 3 Apr 2017 16:34:29 +0100
-Subject: [PATCH] data: Use the stateless dbus-1 system.d directory
+Subject: [PATCH 1/2] data: Use the stateless dbus-1 system.d directory
 
 Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
 ---
