@@ -4,7 +4,7 @@
 #
 Name     : accountsservice
 Version  : 0.6.45
-Release  : 6
+Release  : 7
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.45.tar.xz
 Summary  : Client Library for communicating with accounts service
@@ -39,6 +39,7 @@ BuildRequires : pkgconfig(libsystemd)
 BuildRequires : pkgconfig(polkit-gobject-1)
 BuildRequires : xmlto
 Patch1: 0001-data-Use-the-stateless-dbus-1-system.d-directory.patch
+Patch2: 0002-daemon-Support-stateless-operating-systems-with-spli.patch
 
 %description
 Overview
@@ -114,13 +115,14 @@ locales components for the accountsservice package.
 %prep
 %setup -q -n accountsservice-0.6.45
 %patch1 -p1
+%patch2 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1492695456
+export SOURCE_DATE_EPOCH=1492704948
 %reconfigure --disable-static --enable-user-heuristics
 make V=1  %{?_smp_mflags}
 
@@ -132,7 +134,7 @@ export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1492695456
+export SOURCE_DATE_EPOCH=1492704948
 rm -rf %{buildroot}
 %make_install
 %find_lang accounts-service
