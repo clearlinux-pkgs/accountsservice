@@ -35,7 +35,7 @@ index 312394a..007b777 100644
 + * Stateless (vendor) entries
 + */
 +#define PATH_ALT_PASSWD "/usr/share/defaults/etc/passwd"
-+#define PATH_ALT_SHADOW "/usr/share/defautls/etc/shadow"
++#define PATH_ALT_SHADOW "/usr/share/defaults/etc/shadow"
 +#define PATH_ALT_GROUP "/etc/group"
 +
  enum {
