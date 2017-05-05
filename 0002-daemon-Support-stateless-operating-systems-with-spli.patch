@@ -1,7 +1,7 @@
-From a399a19daed260df2cd0f7a8c928b76d4ef6d344 Mon Sep 17 00:00:00 2001
+From a1372a203b4d0f1a6466c1af89c886929e8681a8 Mon Sep 17 00:00:00 2001
 From: Ikey Doherty <michael.i.doherty@intel.com>
 Date: Thu, 20 Apr 2017 17:07:21 +0100
-Subject: [PATCH 2/2] daemon: Support stateless operating systems with split
+Subject: [PATCH 2/3] daemon: Support stateless operating systems with split
  passwd/shadow
 
 On certain operating systems, such as the Clear Linux Project for Intel
@@ -16,7 +16,7 @@ Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
  1 file changed, 55 insertions(+), 13 deletions(-)
 
 diff --git a/src/daemon.c b/src/daemon.c
-index 312394a..007b777 100644
+index 312394a..b23ae28 100644
 --- a/src/daemon.c
 +++ b/src/daemon.c
 @@ -48,11 +48,21 @@
