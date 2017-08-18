@@ -1,0 +1,4 @@
+Configure miss: /etc/redhat-release
+Configure miss: /etc/debian_version
+Configure miss: whether to build with gcov testing
+Configure miss: setutxdb
