@@ -4,7 +4,7 @@
 #
 Name     : accountsservice
 Version  : 0.6.47
-Release  : 16
+Release  : 17
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.47.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.47.tar.xz
 Summary  : Client Library for communicating with accounts service
@@ -14,13 +14,14 @@ Requires: accountsservice-config
 Requires: accountsservice-data
 Requires: accountsservice-lib
 Requires: accountsservice-bin
-Requires: accountsservice-doc
+Requires: accountsservice-license
 Requires: accountsservice-locales
 BuildRequires : automake
 BuildRequires : automake-dev
 BuildRequires : docbook-xml
 BuildRequires : gettext
 BuildRequires : gettext-bin
+BuildRequires : glibc-bin
 BuildRequires : gtk-doc
 BuildRequires : gtk-doc-dev
 BuildRequires : intltool
@@ -42,6 +43,7 @@ BuildRequires : xmlto
 Patch1: 0001-data-Use-the-stateless-dbus-1-system.d-directory.patch
 Patch2: 0002-daemon-Support-stateless-operating-systems-with-spli.patch
 Patch3: 0003-Add-support-for-default-group-policy-within-Clear-Li.patch
+Patch4: CVE-2018-14036.patch
 
 %description
 Overview
@@ -55,6 +57,7 @@ Summary: bin components for the accountsservice package.
 Group: Binaries
 Requires: accountsservice-data
 Requires: accountsservice-config
+Requires: accountsservice-license
 
 %description bin
 bin components for the accountsservice package.
@@ -100,9 +103,18 @@ doc components for the accountsservice package.
 Summary: lib components for the accountsservice package.
 Group: Libraries
 Requires: accountsservice-data
+Requires: accountsservice-license
 
 %description lib
 lib components for the accountsservice package.
+
+
+%package license
+Summary: license components for the accountsservice package.
+Group: Default
+
+%description license
+license components for the accountsservice package.
 
 
 %package locales
@@ -118,13 +130,18 @@ locales components for the accountsservice package.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1524676525
+export SOURCE_DATE_EPOCH=1536349819
+export CFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FCFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
+export CXXFLAGS="$CXXFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
 %reconfigure --disable-static --enable-user-heuristics
 make  %{?_smp_mflags}
 
@@ -136,8 +153,10 @@ export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1524676525
+export SOURCE_DATE_EPOCH=1536349819
 rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/share/doc/accountsservice
+cp COPYING %{buildroot}/usr/share/doc/accountsservice/COPYING
 %make_install
 %find_lang accounts-service
 
@@ -172,7 +191,7 @@ rm -rf %{buildroot}
 /usr/lib64/pkgconfig/accountsservice.pc
 
 %files doc
-%defattr(-,root,root,-)
+%defattr(0644,root,root,0755)
 /usr/share/gtk-doc/html/libaccountsservice/ActUser.html
 /usr/share/gtk-doc/html/libaccountsservice/ActUserManager.html
 /usr/share/gtk-doc/html/libaccountsservice/annotation-glossary.html
@@ -195,6 +214,10 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 /usr/lib64/libaccountsservice.so.0
 /usr/lib64/libaccountsservice.so.0.0.0
+
+%files license
+%defattr(-,root,root,-)
+/usr/share/doc/accountsservice/COPYING
 
 %files locales -f accounts-service.lang
 %defattr(-,root,root,-)
