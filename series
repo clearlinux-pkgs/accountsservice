@@ -2,3 +2,4 @@
 0002-daemon-Support-stateless-operating-systems-with-spli.patch
 0003-Add-support-for-default-group-policy-within-Clear-Li.patch
 CVE-2018-14036.patch
+0004-fix-stateless-autologin.patch
