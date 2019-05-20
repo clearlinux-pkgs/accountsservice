@@ -4,18 +4,18 @@
 #
 Name     : accountsservice
 Version  : 0.6.47
-Release  : 17
+Release  : 18
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.47.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.47.tar.xz
 Summary  : Client Library for communicating with accounts service
 Group    : Development/Tools
 License  : GPL-3.0
-Requires: accountsservice-config
-Requires: accountsservice-data
-Requires: accountsservice-lib
-Requires: accountsservice-bin
-Requires: accountsservice-license
-Requires: accountsservice-locales
+Requires: accountsservice-data = %{version}-%{release}
+Requires: accountsservice-lib = %{version}-%{release}
+Requires: accountsservice-libexec = %{version}-%{release}
+Requires: accountsservice-license = %{version}-%{release}
+Requires: accountsservice-locales = %{version}-%{release}
+Requires: accountsservice-services = %{version}-%{release}
 BuildRequires : automake
 BuildRequires : automake-dev
 BuildRequires : docbook-xml
@@ -44,6 +44,7 @@ Patch1: 0001-data-Use-the-stateless-dbus-1-system.d-directory.patch
 Patch2: 0002-daemon-Support-stateless-operating-systems-with-spli.patch
 Patch3: 0003-Add-support-for-default-group-policy-within-Clear-Li.patch
 Patch4: CVE-2018-14036.patch
+Patch5: 0004-fix-stateless-autologin.patch
 
 %description
 Overview
@@ -51,25 +52,6 @@ Overview
 The AccountsService project provides
 o  A set of D-Bus interfaces for querying and manipulating
 user account information.
-
-%package bin
-Summary: bin components for the accountsservice package.
-Group: Binaries
-Requires: accountsservice-data
-Requires: accountsservice-config
-Requires: accountsservice-license
-
-%description bin
-bin components for the accountsservice package.
-
-
-%package config
-Summary: config components for the accountsservice package.
-Group: Default
-
-%description config
-config components for the accountsservice package.
-
 
 %package data
 Summary: data components for the accountsservice package.
@@ -82,10 +64,10 @@ data components for the accountsservice package.
 %package dev
 Summary: dev components for the accountsservice package.
 Group: Development
-Requires: accountsservice-lib
-Requires: accountsservice-bin
-Requires: accountsservice-data
-Provides: accountsservice-devel
+Requires: accountsservice-lib = %{version}-%{release}
+Requires: accountsservice-data = %{version}-%{release}
+Provides: accountsservice-devel = %{version}-%{release}
+Requires: accountsservice = %{version}-%{release}
 
 %description dev
 dev components for the accountsservice package.
@@ -102,11 +84,21 @@ doc components for the accountsservice package.
 %package lib
 Summary: lib components for the accountsservice package.
 Group: Libraries
-Requires: accountsservice-data
-Requires: accountsservice-license
+Requires: accountsservice-data = %{version}-%{release}
+Requires: accountsservice-libexec = %{version}-%{release}
+Requires: accountsservice-license = %{version}-%{release}
 
 %description lib
 lib components for the accountsservice package.
+
+
+%package libexec
+Summary: libexec components for the accountsservice package.
+Group: Default
+Requires: accountsservice-license = %{version}-%{release}
+
+%description libexec
+libexec components for the accountsservice package.
 
 
 %package license
@@ -125,19 +117,30 @@ Group: Default
 locales components for the accountsservice package.
 
 
+%package services
+Summary: services components for the accountsservice package.
+Group: Systemd services
+
+%description services
+services components for the accountsservice package.
+
+
 %prep
 %setup -q -n accountsservice-0.6.47
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1536349819
+export SOURCE_DATE_EPOCH=1558362687
+export GCC_IGNORE_WERROR=1
+export LDFLAGS="${LDFLAGS} -fno-lto"
 export CFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
 export FCFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
 export FFLAGS="$CFLAGS -fstack-protector-strong -mzero-caller-saved-regs=used "
@@ -153,23 +156,15 @@ export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1536349819
+export SOURCE_DATE_EPOCH=1558362687
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/usr/share/doc/accountsservice
-cp COPYING %{buildroot}/usr/share/doc/accountsservice/COPYING
+mkdir -p %{buildroot}/usr/share/package-licenses/accountsservice
+cp COPYING %{buildroot}/usr/share/package-licenses/accountsservice/COPYING
 %make_install
 %find_lang accounts-service
 
 %files
 %defattr(-,root,root,-)
-
-%files bin
-%defattr(-,root,root,-)
-/usr/libexec/accounts-daemon
-
-%files config
-%defattr(-,root,root,-)
-/usr/lib/systemd/system/accounts-daemon.service
 
 %files data
 %defattr(-,root,root,-)
@@ -215,9 +210,17 @@ cp COPYING %{buildroot}/usr/share/doc/accountsservice/COPYING
 /usr/lib64/libaccountsservice.so.0
 /usr/lib64/libaccountsservice.so.0.0.0
 
-%files license
+%files libexec
 %defattr(-,root,root,-)
-/usr/share/doc/accountsservice/COPYING
+/usr/libexec/accounts-daemon
+
+%files license
+%defattr(0644,root,root,0755)
+/usr/share/package-licenses/accountsservice/COPYING
+
+%files services
+%defattr(-,root,root,-)
+/usr/lib/systemd/system/accounts-daemon.service
 
 %files locales -f accounts-service.lang
 %defattr(-,root,root,-)
