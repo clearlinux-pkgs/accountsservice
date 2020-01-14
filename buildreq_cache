@@ -1,3 +1,7 @@
-0.6.47
-glibc-bin
-xmlto
+0.6.55
+dbus-dev
+docbook-xml
+pkgconfig(dbus-1)
+pkgconfig(polkit-gobject-1)
+pkgconfig(systemd)
+polkit-dev

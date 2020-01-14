@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Patrick McCarty <patrick.mccarty@intel.com>
+Date: Tue, 14 Jan 2020 13:59:05 -0800
+Subject: [PATCH] Use stateless dbus-1 system.d directory
+
+Signed-off-by: Patrick McCarty <patrick.mccarty@intel.com>
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 4465a26..3cbdddb 100644
+--- a/meson.build
++++ b/meson.build
+@@ -126,7 +126,7 @@ polkit_gobject_dep = dependency('polkit-gobject-1')
+ crypt_dep = cc.find_library('crypt')
+ 
+ dbus_dep = dependency('dbus-1')
+-dbus_conf_dir = join_paths(dbus_dep.get_pkgconfig_variable('sysconfdir', define_variable: ['sysconfdir', act_sysconfdir]), 'dbus-1', 'system.d')
++dbus_conf_dir = join_paths(dbus_dep.get_pkgconfig_variable('datadir', define_variable: ['sysconfdir', act_sysconfdir]), 'dbus-1', 'system.d')
+ dbus_ifaces_dir = dbus_dep.get_pkgconfig_variable('interfaces_dir', define_variable: ['datadir', act_datadir])
+ dbus_sys_dir = dbus_dep.get_pkgconfig_variable('system_bus_services_dir', define_variable: ['datadir', act_datadir])
+ 

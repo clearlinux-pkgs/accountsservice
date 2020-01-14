@@ -1,5 +1,4 @@
-0001-data-Use-the-stateless-dbus-1-system.d-directory.patch
+0001-Use-stateless-dbus-1-system.d-directory.patch
 0002-daemon-Support-stateless-operating-systems-with-spli.patch
 0003-Add-support-for-default-group-policy-within-Clear-Li.patch
-CVE-2018-14036.patch
 0004-fix-stateless-autologin.patch

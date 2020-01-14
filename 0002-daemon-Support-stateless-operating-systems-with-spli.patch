@@ -1,7 +1,7 @@
-From a1372a203b4d0f1a6466c1af89c886929e8681a8 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ikey Doherty <michael.i.doherty@intel.com>
 Date: Thu, 20 Apr 2017 17:07:21 +0100
-Subject: [PATCH 2/3] daemon: Support stateless operating systems with split
+Subject: [PATCH] daemon: Support stateless operating systems with split
  passwd/shadow
 
 On certain operating systems, such as the Clear Linux Project for Intel
@@ -11,12 +11,13 @@ also look them up in the system records in /usr/share/defaults/etc,
 for the users/groups defined by the stateless policy.
 
 Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
+Signed-off-by: Patrick McCarty <patrick.mccarty@intel.com>
 ---
- src/daemon.c | 68 ++++++++++++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 55 insertions(+), 13 deletions(-)
+ src/daemon.c | 67 ++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 54 insertions(+), 13 deletions(-)
 
 diff --git a/src/daemon.c b/src/daemon.c
-index 312394a..b23ae28 100644
+index c52bda3..2e8a2a3 100644
 --- a/src/daemon.c
 +++ b/src/daemon.c
 @@ -48,10 +48,20 @@
@@ -40,7 +41,7 @@ index 312394a..b23ae28 100644
  enum {
          PROP_0,
          PROP_DAEMON_VERSION
-@@ -66,12 +76,18 @@ struct DaemonPrivate {
+@@ -66,12 +76,18 @@ typedef struct {
  
          User *autologin;
  
@@ -56,19 +57,19 @@ index 312394a..b23ae28 100644
 +        GFileMonitor *alt_shadow_monitor;
 +        GFileMonitor *alt_group_monitor;
 +
-         guint reload_id;
-         guint autologin_id;
+         GQueue *pending_list_cached_users;
  
-@@ -79,7 +95,7 @@ struct DaemonPrivate {
+         guint reload_id;
+@@ -81,7 +97,7 @@ typedef struct {
          GHashTable *extension_ifaces;
- };
+ } DaemonPrivate;
  
 -typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry);
 +typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file);
  
- static void daemon_accounts_accounts_iface_init (AccountsAccountsIface *iface);
- 
-@@ -144,7 +160,9 @@ static struct passwd *
+ typedef struct {
+         Daemon *daemon;
+@@ -168,7 +184,9 @@ static struct passwd *
  entry_generator_fgetpwent (Daemon       *daemon,
                             GHashTable   *users,
                             gpointer     *state,
@@ -79,7 +80,7 @@ index 312394a..b23ae28 100644
  {
          struct passwd *pwent;
  
-@@ -164,9 +182,9 @@ entry_generator_fgetpwent (Daemon       *daemon,
+@@ -188,9 +206,9 @@ entry_generator_fgetpwent (Daemon       *daemon,
                  FILE *fp;
                  struct spwd *shadow_entry;
  
@@ -91,7 +92,7 @@ index 312394a..b23ae28 100644
                          return NULL;
                  }
  
-@@ -196,10 +214,10 @@ entry_generator_fgetpwent (Daemon       *daemon,
+@@ -220,10 +238,10 @@ entry_generator_fgetpwent (Daemon       *daemon,
                          return NULL;
                  }
  
@@ -104,7 +105,7 @@ index 312394a..b23ae28 100644
                          return NULL;
                  }
  
-@@ -238,7 +256,9 @@ static struct passwd *
+@@ -262,7 +280,9 @@ static struct passwd *
  entry_generator_cachedir (Daemon       *daemon,
                            GHashTable   *users,
                            gpointer     *state,
@@ -114,8 +115,8 @@ index 312394a..b23ae28 100644
 +                          __attribute__((unused)) const gchar *shadow_file)
  {
          struct passwd *pwent;
-         const gchar *name;
-@@ -312,7 +332,9 @@ static struct passwd *
+         g_autoptr(GError) error = NULL;
+@@ -343,7 +363,9 @@ static struct passwd *
  entry_generator_requested_users (Daemon       *daemon,
                                   GHashTable   *users,
                                   gpointer     *state,
@@ -124,9 +125,9 @@ index 312394a..b23ae28 100644
 +                                 __attribute__((unused)) const gchar *pwfile,
 +                                 __attribute__((unused)) const gchar *shadow_file)
  {
+         DaemonPrivate *priv = daemon_get_instance_private (daemon);
          struct passwd *pwent;
-         GList *node;
-@@ -357,7 +379,9 @@ static void
+@@ -389,7 +411,9 @@ static void
  load_entries (Daemon             *daemon,
                GHashTable         *users,
                gboolean            explicitly_requested,
@@ -135,9 +136,9 @@ index 312394a..b23ae28 100644
 +              const gchar *pwfile,
 +              const gchar *shadow_file)
  {
+         DaemonPrivate *priv = daemon_get_instance_private (daemon);
          gpointer generator_state = NULL;
-         struct passwd *pwent;
-@@ -368,7 +392,7 @@ load_entries (Daemon             *daemon,
+@@ -401,7 +425,7 @@ load_entries (Daemon             *daemon,
  
          for (;;) {
                  spent = NULL;
@@ -146,7 +147,7 @@ index 312394a..b23ae28 100644
                  if (pwent == NULL)
                          break;
  
-@@ -431,17 +455,21 @@ reload_users (Daemon *daemon)
+@@ -475,17 +499,21 @@ reload_users (Daemon *daemon)
           */
  
          /* Load the local users into our hash table */
@@ -171,34 +172,30 @@ index 312394a..b23ae28 100644
  
          wtmp_helper_update_login_frequencies (users);
  
-@@ -649,6 +677,7 @@ daemon_init (Daemon *daemon)
+@@ -733,6 +761,7 @@ daemon_init (Daemon *daemon)
  
-         daemon->priv->users = create_users_hash_table ();
+         priv->pending_list_cached_users = g_queue_new ();
  
 +        /* Non-stateless users */
-         daemon->priv->passwd_monitor = setup_monitor (daemon,
-                                                       PATH_PASSWD,
-                                                       on_users_monitor_changed);
-@@ -666,6 +695,19 @@ daemon_init (Daemon *daemon)
-         daemon->priv->gdm_monitor = setup_monitor (daemon,
-                                                    PATH_GDM_CUSTOM,
-                                                    on_gdm_monitor_changed);
-+
+         priv->passwd_monitor = setup_monitor (daemon,
+                                               PATH_PASSWD,
+                                               on_users_monitor_changed);
+@@ -750,6 +779,18 @@ daemon_init (Daemon *daemon)
+         priv->gdm_monitor = setup_monitor (daemon,
+                                            PATH_GDM_CUSTOM,
+                                            on_gdm_monitor_changed);
 +
 +        /* Stateless users */
-+        daemon->priv->alt_passwd_monitor = setup_monitor (daemon,
-+                                                          PATH_PASSWD,
-+                                                          on_users_monitor_changed);
-+        daemon->priv->alt_shadow_monitor = setup_monitor (daemon,
-+                                                          PATH_SHADOW,
-+                                                          on_users_monitor_changed);
-+        daemon->priv->alt_group_monitor = setup_monitor (daemon,
-+                                                         PATH_GROUP,
-+                                                         on_users_monitor_changed);
++        priv->alt_passwd_monitor = setup_monitor (daemon,
++                                                  PATH_PASSWD,
++                                                  on_users_monitor_changed);
++        priv->alt_shadow_monitor = setup_monitor (daemon,
++                                                  PATH_SHADOW,
++                                                  on_users_monitor_changed);
++        priv->alt_group_monitor = setup_monitor (daemon,
++                                                 PATH_GROUP,
++                                                 on_users_monitor_changed);
 +
          reload_users_timeout (daemon);
          queue_reload_autologin (daemon);
  }
--- 
-2.12.2
-

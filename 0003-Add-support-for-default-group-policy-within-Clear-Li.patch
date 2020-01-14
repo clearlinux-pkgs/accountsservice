@@ -1,7 +1,7 @@
-From b80f51e0a9acb80d1046a9146842350e533a9205 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ikey Doherty <michael.i.doherty@intel.com>
 Date: Fri, 5 May 2017 14:16:49 +0100
-Subject: [PATCH 3/3] Add support for default group policy within Clear Linux
+Subject: [PATCH] Add support for default group policy within Clear Linux
 
 At minimum we require newly created administrators to be within the wheel
 and adm group. However we want *all* user types to also be in some extra
@@ -11,21 +11,23 @@ This patch ensures the first run of the desktop experience for Clear Linux
 correctly initialises the new administrator for full functionality.
 
 Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
+Signed-off-by: Patrick McCarty <patrick.mccarty@intel.com>
 ---
- src/daemon.c | 51 +++++++++++++++++++++++++++++++++------------------
- src/util.c   | 23 +++++++++++++++++++++++
+ src/daemon.c | 58 ++++++++++++++++++++++++++++++----------------------
+ src/util.c   | 23 +++++++++++++++++++++
  src/util.h   |  4 ++++
- 3 files changed, 60 insertions(+), 18 deletions(-)
+ 3 files changed, 60 insertions(+), 25 deletions(-)
 
 diff --git a/src/daemon.c b/src/daemon.c
-index b23ae28..d6e3125 100644
+index 2e8a2a3..3eee52e 100644
 --- a/src/daemon.c
 +++ b/src/daemon.c
-@@ -1064,7 +1064,26 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
+@@ -1137,8 +1137,26 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
          CreateUserData *cd = data;
          User *user;
          g_autoptr(GError) error = NULL;
 -        const gchar *argv[9];
+-        g_autofree gchar *admin_groups = NULL;
 +        /* Clear Linux uses merged bin directories, i.e. sbin -> bin */
 +        const gchar *argv[] = {
 +                "/usr/sbin/useradd",
@@ -49,7 +51,7 @@ index b23ae28..d6e3125 100644
  
          if (getpwnam (cd->user_name) != NULL) {
                  throw_error (context, ERROR_USER_EXISTS, "A user with name '%s' already exists", cd->user_name);
-@@ -1074,30 +1093,7 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
+@@ -1147,29 +1165,7 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
  
          sys_log (context, "create user '%s'", cd->user_name);
  
@@ -58,12 +60,11 @@ index b23ae28..d6e3125 100644
 -        argv[2] = "-c";
 -        argv[3] = cd->real_name;
 -        if (cd->account_type == ACCOUNT_TYPE_ADMINISTRATOR) {
--                g_autofree gchar *admin_groups = NULL;
--
--                admin_groups = g_strdup (ADMIN_GROUP);
 -                if (EXTRA_ADMIN_GROUPS != NULL && EXTRA_ADMIN_GROUPS[0] != '\0')
--                        admin_groups = g_strconcat (admin_groups, ",",
+-                        admin_groups = g_strconcat (ADMIN_GROUP, ",",
 -                                                    EXTRA_ADMIN_GROUPS, NULL);
+-                else
+-                        admin_groups = g_strdup (ADMIN_GROUP);
 -
 -                argv[4] = "-G";
 -                argv[5] = admin_groups;
@@ -81,7 +82,7 @@ index b23ae28..d6e3125 100644
                  throw_error (context, ERROR_FAILED, "Don't know how to add user of type %d", cd->account_type);
                  return;
          }
-@@ -1102,6 +1105,18 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
+@@ -1179,6 +1175,18 @@ daemon_create_user_authorized_cb (Daemon                *daemon,
                  return;
          }
  
@@ -101,10 +102,10 @@ index b23ae28..d6e3125 100644
          user_update_local_account_property (user, TRUE);
          user_update_system_account_property (user, FALSE);
 diff --git a/src/util.c b/src/util.c
-index 84e7b78..3d9deb3 100644
+index 0372b4b..0140ac1 100644
 --- a/src/util.c
 +++ b/src/util.c
-@@ -313,3 +313,26 @@ get_caller_uid (GDBusMethodInvocation *context,
+@@ -289,3 +289,26 @@ get_caller_uid (GDBusMethodInvocation *context,
  
          return TRUE;
  }
@@ -146,6 +147,3 @@ index 41ba545..a2c6688 100644
  G_END_DECLS
  
  #endif /* __UTIL_H__ */
--- 
-2.12.2
-

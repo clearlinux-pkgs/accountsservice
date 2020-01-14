@@ -89,6 +89,12 @@ libaccountsservice.so.0:accounts_user_call_set_password_sync
 libaccountsservice.so.0:accounts_user_call_set_real_name
 libaccountsservice.so.0:accounts_user_call_set_real_name_finish
 libaccountsservice.so.0:accounts_user_call_set_real_name_sync
+libaccountsservice.so.0:accounts_user_call_set_session
+libaccountsservice.so.0:accounts_user_call_set_session_finish
+libaccountsservice.so.0:accounts_user_call_set_session_sync
+libaccountsservice.so.0:accounts_user_call_set_session_type
+libaccountsservice.so.0:accounts_user_call_set_session_type_finish
+libaccountsservice.so.0:accounts_user_call_set_session_type_sync
 libaccountsservice.so.0:accounts_user_call_set_shell
 libaccountsservice.so.0:accounts_user_call_set_shell_finish
 libaccountsservice.so.0:accounts_user_call_set_shell_sync
@@ -111,6 +117,8 @@ libaccountsservice.so.0:accounts_user_complete_set_password
 libaccountsservice.so.0:accounts_user_complete_set_password_hint
 libaccountsservice.so.0:accounts_user_complete_set_password_mode
 libaccountsservice.so.0:accounts_user_complete_set_real_name
+libaccountsservice.so.0:accounts_user_complete_set_session
+libaccountsservice.so.0:accounts_user_complete_set_session_type
 libaccountsservice.so.0:accounts_user_complete_set_shell
 libaccountsservice.so.0:accounts_user_complete_set_user_name
 libaccountsservice.so.0:accounts_user_complete_set_xsession
@@ -122,6 +130,8 @@ libaccountsservice.so.0:accounts_user_dup_location
 libaccountsservice.so.0:accounts_user_dup_login_history
 libaccountsservice.so.0:accounts_user_dup_password_hint
 libaccountsservice.so.0:accounts_user_dup_real_name
+libaccountsservice.so.0:accounts_user_dup_session
+libaccountsservice.so.0:accounts_user_dup_session_type
 libaccountsservice.so.0:accounts_user_dup_shell
 libaccountsservice.so.0:accounts_user_dup_user_name
 libaccountsservice.so.0:accounts_user_dup_xsession
@@ -141,6 +151,9 @@ libaccountsservice.so.0:accounts_user_get_login_time
 libaccountsservice.so.0:accounts_user_get_password_hint
 libaccountsservice.so.0:accounts_user_get_password_mode
 libaccountsservice.so.0:accounts_user_get_real_name
+libaccountsservice.so.0:accounts_user_get_saved
+libaccountsservice.so.0:accounts_user_get_session
+libaccountsservice.so.0:accounts_user_get_session_type
 libaccountsservice.so.0:accounts_user_get_shell
 libaccountsservice.so.0:accounts_user_get_system_account
 libaccountsservice.so.0:accounts_user_get_type
@@ -171,6 +184,9 @@ libaccountsservice.so.0:accounts_user_set_login_time
 libaccountsservice.so.0:accounts_user_set_password_hint
 libaccountsservice.so.0:accounts_user_set_password_mode
 libaccountsservice.so.0:accounts_user_set_real_name
+libaccountsservice.so.0:accounts_user_set_saved
+libaccountsservice.so.0:accounts_user_set_session
+libaccountsservice.so.0:accounts_user_set_session_type
 libaccountsservice.so.0:accounts_user_set_shell
 libaccountsservice.so.0:accounts_user_set_system_account
 libaccountsservice.so.0:accounts_user_set_uid
@@ -199,6 +215,9 @@ libaccountsservice.so.0:act_user_get_password_hint
 libaccountsservice.so.0:act_user_get_password_mode
 libaccountsservice.so.0:act_user_get_primary_session_id
 libaccountsservice.so.0:act_user_get_real_name
+libaccountsservice.so.0:act_user_get_saved
+libaccountsservice.so.0:act_user_get_session
+libaccountsservice.so.0:act_user_get_session_type
 libaccountsservice.so.0:act_user_get_shell
 libaccountsservice.so.0:act_user_get_type
 libaccountsservice.so.0:act_user_get_uid
@@ -245,6 +264,8 @@ libaccountsservice.so.0:act_user_set_password
 libaccountsservice.so.0:act_user_set_password_hint
 libaccountsservice.so.0:act_user_set_password_mode
 libaccountsservice.so.0:act_user_set_real_name
+libaccountsservice.so.0:act_user_set_session
+libaccountsservice.so.0:act_user_set_session_type
 libaccountsservice.so.0:act_user_set_user_name
 libaccountsservice.so.0:act_user_set_x_session
 libaccountsservice.so.0:console_kit_manager_call_can_restart
