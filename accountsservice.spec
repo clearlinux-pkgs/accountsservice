@@ -4,7 +4,7 @@
 #
 Name     : accountsservice
 Version  : 0.6.55
-Release  : 19
+Release  : 20
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.55.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.55.tar.xz
 Summary  : No detailed summary available
@@ -24,6 +24,7 @@ BuildRequires : intltool-dev
 BuildRequires : libxml2-dev
 BuildRequires : pkgconfig(dbus-1)
 BuildRequires : pkgconfig(gobject-introspection-1.0)
+BuildRequires : pkgconfig(libsystemd)
 BuildRequires : pkgconfig(polkit-gobject-1)
 BuildRequires : pkgconfig(systemd)
 BuildRequires : polkit-dev
@@ -120,11 +121,11 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1579042245
+export SOURCE_DATE_EPOCH=1586221367
 export GCC_IGNORE_WERROR=1
 export CFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
-export FCFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
-export FFLAGS="$CFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FCFLAGS="$FFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
+export FFLAGS="$FFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
 export CXXFLAGS="$CXXFLAGS -fno-lto -fstack-protector-strong -mzero-caller-saved-regs=used "
 CFLAGS="$CFLAGS" CXXFLAGS="$CXXFLAGS" LDFLAGS="$LDFLAGS" meson --libdir=lib64 --prefix=/usr --buildtype=plain -Dsystemd=true \
 -Dsystemdsystemunitdir=/usr/lib/systemd/system \

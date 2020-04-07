@@ -2,6 +2,7 @@
 dbus-dev
 docbook-xml
 pkgconfig(dbus-1)
+pkgconfig(libsystemd)
 pkgconfig(polkit-gobject-1)
 pkgconfig(systemd)
 polkit-dev
