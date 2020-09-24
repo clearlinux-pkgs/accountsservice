@@ -4,7 +4,7 @@
 #
 Name     : accountsservice
 Version  : 0.6.55
-Release  : 20
+Release  : 21
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.55.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-0.6.55.tar.xz
 Summary  : No detailed summary available
