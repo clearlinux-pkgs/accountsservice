@@ -1,8 +1,9 @@
-0.6.55
+23.13.9
 dbus-dev
 docbook-xml
 pkgconfig(dbus-1)
 pkgconfig(libsystemd)
+pkgconfig(libxcrypt)
 pkgconfig(polkit-gobject-1)
 pkgconfig(systemd)
 polkit-dev

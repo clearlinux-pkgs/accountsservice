@@ -1,3 +1,4 @@
--Dsystemd=true
 -Dsystemdsystemunitdir=/usr/lib/systemd/system
 -Dgtk_doc=true
+-Dadmin_group=wheel
+

@@ -16,186 +16,132 @@ Signed-off-by: Patrick McCarty <patrick.mccarty@intel.com>
  src/daemon.c | 67 ++++++++++++++++++++++++++++++++++++++++++----------
  1 file changed, 54 insertions(+), 13 deletions(-)
 
-diff --git a/src/daemon.c b/src/daemon.c
-index c52bda3..2e8a2a3 100644
---- a/src/daemon.c
-+++ b/src/daemon.c
-@@ -48,10 +48,20 @@
- #include "daemon.h"
- #include "util.h"
- 
-+/**
-+ * Non-stateless (user) entries
-+ */
- #define PATH_PASSWD "/etc/passwd"
- #define PATH_SHADOW "/etc/shadow"
+--- accountsservice-23.13.9/src/daemon.c~	2023-03-27 19:27:39.000000000 +0000
++++ accountsservice-23.13.9/src/daemon.c	2023-05-08 14:17:03.080863059 +0000
+@@ -55,7 +55,12 @@
+ #define PATH_PASSWD "passwd"
+ #define PATH_SHADOW "shadow"
  #define PATH_GROUP "/etc/group"
- 
-+/**
-+ * Stateless (vendor) entries
-+ */
+-#define PATH_DM     "/etc/systemd/system/display-manager.service"
++#define PATH_DM     "/usr/lib/systemd/system/display-manager.service"
++
 +#define PATH_ALT_PASSWD "/usr/share/defaults/etc/passwd"
 +#define PATH_ALT_SHADOW "/usr/share/defaults/etc/shadow"
 +#define PATH_ALT_GROUP "/etc/group"
 +
- enum {
-         PROP_0,
-         PROP_DAEMON_VERSION
-@@ -66,12 +76,18 @@ typedef struct {
  
-         User *autologin;
+ enum
+ {
+@@ -94,6 +99,11 @@
+         GFileMonitor    *dm_monitor;
+         GFileMonitor    *wtmp_monitor;
  
-+        /* Non-stateless */
-         GFileMonitor *passwd_monitor;
-         GFileMonitor *shadow_monitor;
-         GFileMonitor *group_monitor;
-         GFileMonitor *gdm_monitor;
-         GFileMonitor *wtmp_monitor;
- 
-+        /* Stateless */
 +        GFileMonitor *alt_passwd_monitor;
 +        GFileMonitor *alt_shadow_monitor;
 +        GFileMonitor *alt_group_monitor;
 +
-         GQueue *pending_list_cached_users;
++
+         GQueue          *pending_list_cached_users;
  
-         guint reload_id;
-@@ -81,7 +97,7 @@ typedef struct {
-         GHashTable *extension_ifaces;
- } DaemonPrivate;
+         UserReloadType   reload_type;
+@@ -109,7 +119,7 @@
+                                                 GHashTable *,
+                                                 GHashTable *,
+                                                 gpointer *,
+-                                                struct spwd **shadow_entry);
++                                                struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file);
  
--typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry);
-+typedef struct passwd * (* EntryGeneratorFunc) (Daemon *, GHashTable *, gpointer *, struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file);
- 
- typedef struct {
-         Daemon *daemon;
-@@ -168,7 +184,9 @@ static struct passwd *
- entry_generator_fgetpwent (Daemon       *daemon,
+ typedef struct
+ {
+@@ -220,7 +230,7 @@
                             GHashTable   *users,
+                            GHashTable   *local_users,
                             gpointer     *state,
 -                           struct spwd **spent)
-+                           struct spwd **spent,
-+                           const gchar *pwfile,
-+                           const gchar *shadow_file)
++                           struct spwd **spent, const gchar *pwfile, const gchar *shadow_file)
  {
          struct passwd *pwent;
  
-@@ -188,9 +206,9 @@ entry_generator_fgetpwent (Daemon       *daemon,
+@@ -248,7 +258,7 @@
                  FILE *fp;
                  struct spwd *shadow_entry;
  
--                fp = fopen (PATH_SHADOW, "r");
-+                fp = fopen (shadow_file, "r");
+-                shadow_path = g_build_filename (get_sysconfdir (), PATH_SHADOW, NULL);
++                shadow_path = g_build_filename (get_sysconfdir (), shadow_file, NULL);
+                 fp = fopen (shadow_path, "r");
                  if (fp == NULL) {
--                        g_warning ("Unable to open %s: %s", PATH_SHADOW, g_strerror (errno));
-+                        g_warning ("Unable to open %s: %s", shadow_file, g_strerror (errno));
+                         g_warning ("Unable to open %s: %s", shadow_path, g_strerror (errno));
+@@ -282,7 +292,7 @@
                          return NULL;
                  }
  
-@@ -220,10 +238,10 @@ entry_generator_fgetpwent (Daemon       *daemon,
-                         return NULL;
-                 }
- 
--                fp = fopen (PATH_PASSWD, "r");
-+                fp = fopen (pwfile, "r");
+-                passwd_path = g_build_filename (get_sysconfdir (), PATH_PASSWD, NULL);
++                passwd_path = g_build_filename (get_sysconfdir (), pwfile, NULL);
+                 fp = fopen (passwd_path, "r");
                  if (fp == NULL) {
                          g_clear_pointer (&shadow_users, g_hash_table_unref);
--                        g_warning ("Unable to open %s: %s", PATH_PASSWD, g_strerror (errno));
-+                        g_warning ("Unable to open %s: %s", pwfile, g_strerror (errno));
-                         return NULL;
-                 }
- 
-@@ -262,7 +280,9 @@ static struct passwd *
- entry_generator_cachedir (Daemon       *daemon,
+@@ -333,7 +343,7 @@
                            GHashTable   *users,
+                           GHashTable   *local_users,
                            gpointer     *state,
 -                          struct spwd **shadow_entry)
-+                          struct spwd **shadow_entry,
-+                          __attribute__((unused)) const gchar *pwfile,
-+                          __attribute__((unused)) const gchar *shadow_file)
++                          struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file)
  {
          struct passwd *pwent;
-         g_autoptr(GError) error = NULL;
-@@ -343,7 +363,9 @@ static struct passwd *
- entry_generator_requested_users (Daemon       *daemon,
+ 
+@@ -419,7 +429,7 @@
                                   GHashTable   *users,
+                                  GHashTable   *local_users,
                                   gpointer     *state,
 -                                 struct spwd **shadow_entry)
-+                                 struct spwd **shadow_entry,
-+                                 __attribute__((unused)) const gchar *pwfile,
-+                                 __attribute__((unused)) const gchar *shadow_file)
++                                 struct spwd **shadow_entry, const gchar *pwfile, const gchar *shadow_file)
  {
          DaemonPrivate *priv = daemon_get_instance_private (daemon);
          struct passwd *pwent;
-@@ -389,7 +411,9 @@ static void
- load_entries (Daemon             *daemon,
-               GHashTable         *users,
-               gboolean            explicitly_requested,
--              EntryGeneratorFunc  entry_generator)
-+              EntryGeneratorFunc  entry_generator,
-+              const gchar *pwfile,
-+              const gchar *shadow_file)
+@@ -466,7 +476,7 @@
+               GHashTable        *users,
+               GHashTable        *local_users,
+               gboolean           explicitly_requested,
+-              EntryGeneratorFunc entry_generator)
++              EntryGeneratorFunc entry_generator, const gchar *pwfile, const gchar *shadow_file)
  {
          DaemonPrivate *priv = daemon_get_instance_private (daemon);
          gpointer generator_state = NULL;
-@@ -401,7 +425,7 @@ load_entries (Daemon             *daemon,
+@@ -478,7 +488,7 @@
  
          for (;;) {
                  spent = NULL;
--                pwent = entry_generator (daemon, users, &generator_state, &spent);
-+                pwent = entry_generator (daemon, users, &generator_state, &spent, pwfile, shadow_file);
+-                pwent = entry_generator (daemon, users, local_users, &generator_state, &spent);
++                pwent = entry_generator (daemon, users, local_users, &generator_state, &spent, pwfile, shadow_file);
                  if (pwent == NULL)
                          break;
  
-@@ -475,17 +499,21 @@ reload_users (Daemon *daemon)
+@@ -558,13 +568,14 @@
           */
  
-         /* Load the local users into our hash table */
--        load_entries (daemon, users, FALSE, entry_generator_fgetpwent);
-+        load_entries (daemon, users, FALSE, entry_generator_fgetpwent, PATH_PASSWD, PATH_SHADOW);
-+
-+        /* Load stateless users next as they may be overriden already by /etc/passwd so skipped */
-+        load_entries (daemon, users, FALSE, entry_generator_fgetpwent, PATH_ALT_PASSWD, PATH_ALT_SHADOW);
-+
-         local = g_hash_table_new (g_str_hash, g_str_equal);
-         g_hash_table_iter_init (&iter, users);
-         while (g_hash_table_iter_next (&iter, &name, NULL))
-                 g_hash_table_add (local, name);
- 
-         /* and add users to hash table that were explicitly requested  */
--        load_entries (daemon, users, TRUE, entry_generator_requested_users);
-+        load_entries (daemon, users, TRUE, entry_generator_requested_users, NULL, NULL);
+         /* Load the local users into our hash tables */
+-        load_entries (daemon, users, local_users, FALSE, entry_generator_fgetpwent);
++        load_entries (daemon, users, local_users, FALSE, entry_generator_fgetpwent, PATH_PASSWD, PATH_SHADOW);
++        load_entries (daemon, users, local_users, FALSE, entry_generator_fgetpwent, PATH_ALT_PASSWD, PATH_ALT_SHADOW);
  
          /* Now add/update users from other sources, possibly non-local */
--        load_entries (daemon, users, FALSE, entry_generator_cachedir);
-+        load_entries (daemon, users, FALSE, entry_generator_cachedir, NULL, NULL);
+-        load_entries (daemon, users, local_users, TRUE, entry_generator_cachedir);
++        load_entries (daemon, users, local_users, TRUE, entry_generator_cachedir, NULL, NULL);
+ 
+         /* and add users to hash table that were explicitly requested  */
+-        load_entries (daemon, users, local_users, TRUE, entry_generator_requested_users);
++        load_entries (daemon, users, local_users, TRUE, entry_generator_requested_users, NULL, NULL);
  
          wtmp_helper_update_login_frequencies (users);
  
-@@ -733,6 +761,7 @@ daemon_init (Daemon *daemon)
+--- accountsservice-23.13.9/src/daemon.c~	2023-05-08 14:17:03.000000000 +0000
++++ accountsservice-23.13.9/src/daemon.c	2023-05-08 14:34:51.241605169 +0000
+@@ -323,7 +323,7 @@
+                         if (!user_classify_is_human (pwent->pw_uid, pwent->pw_name, pwent->pw_shell)) {
+                                 g_debug ("skipping user: %s", pwent->pw_name);
  
-         priv->pending_list_cached_users = g_queue_new ();
+-                                return entry_generator_fgetpwent (daemon, users, local_users, state, spent);
++                                return entry_generator_fgetpwent (daemon, users, local_users, state, spent, pwfile, shadow_file);
+                         }
  
-+        /* Non-stateless users */
-         priv->passwd_monitor = setup_monitor (daemon,
-                                               PATH_PASSWD,
-                                               on_users_monitor_changed);
-@@ -750,6 +779,18 @@ daemon_init (Daemon *daemon)
-         priv->gdm_monitor = setup_monitor (daemon,
-                                            PATH_GDM_CUSTOM,
-                                            on_gdm_monitor_changed);
-+
-+        /* Stateless users */
-+        priv->alt_passwd_monitor = setup_monitor (daemon,
-+                                                  PATH_PASSWD,
-+                                                  on_users_monitor_changed);
-+        priv->alt_shadow_monitor = setup_monitor (daemon,
-+                                                  PATH_SHADOW,
-+                                                  on_users_monitor_changed);
-+        priv->alt_group_monitor = setup_monitor (daemon,
-+                                                 PATH_GROUP,
-+                                                 on_users_monitor_changed);
-+
-         reload_users_timeout (daemon);
-         queue_reload_autologin (daemon);
- }
+                         return pwent;
