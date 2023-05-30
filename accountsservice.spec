@@ -5,7 +5,7 @@
 #
 Name     : accountsservice
 Version  : 23.13.9
-Release  : 23
+Release  : 24
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Summary  : No detailed summary available
@@ -124,7 +124,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1683556659
+export SOURCE_DATE_EPOCH=1685474527
 export GCC_IGNORE_WERROR=1
 export CFLAGS="$CFLAGS -fdebug-types-section -femit-struct-debug-baseonly -fno-lto -fstack-protector-strong -fzero-call-used-regs=used -g1 -gno-column-info -gno-variable-location-views -gz=zstd "
 export FCFLAGS="$FFLAGS -fdebug-types-section -femit-struct-debug-baseonly -fno-lto -fstack-protector-strong -fzero-call-used-regs=used -g1 -gno-column-info -gno-variable-location-views -gz=zstd "
@@ -173,7 +173,6 @@ DESTDIR=%{buildroot} ninja -C builddir install
 
 %files dev
 %defattr(-,root,root,-)
-/V3/usr/lib64/libaccountsservice.so
 /usr/include/accountsservice-1.0/act/act-user-enum-types.h
 /usr/include/accountsservice-1.0/act/act-user-manager.h
 /usr/include/accountsservice-1.0/act/act-user.h
@@ -203,7 +202,6 @@ DESTDIR=%{buildroot} ninja -C builddir install
 
 %files lib
 %defattr(-,root,root,-)
-/V3/usr/lib64/libaccountsservice.so.0
 /V3/usr/lib64/libaccountsservice.so.0.0.0
 /usr/lib64/libaccountsservice.so.0
 /usr/lib64/libaccountsservice.so.0.0.0
