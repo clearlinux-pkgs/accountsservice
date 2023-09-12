@@ -5,7 +5,7 @@
 #
 Name     : accountsservice
 Version  : 23.13.9
-Release  : 24
+Release  : 25
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Summary  : No detailed summary available
@@ -114,7 +114,7 @@ services components for the accountsservice package.
 %prep
 %setup -q -n accountsservice-23.13.9
 cd %{_builddir}/accountsservice-23.13.9
-%patch1 -p1
+%patch -P 1 -p1
 pushd ..
 cp -a accountsservice-23.13.9 buildavx2
 popd
@@ -124,7 +124,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C.UTF-8
-export SOURCE_DATE_EPOCH=1685474527
+export SOURCE_DATE_EPOCH=1694561466
 export GCC_IGNORE_WERROR=1
 export CFLAGS="$CFLAGS -fdebug-types-section -femit-struct-debug-baseonly -fno-lto -fstack-protector-strong -fzero-call-used-regs=used -g1 -gno-column-info -gno-variable-location-views -gz=zstd "
 export FCFLAGS="$FFLAGS -fdebug-types-section -femit-struct-debug-baseonly -fno-lto -fstack-protector-strong -fzero-call-used-regs=used -g1 -gno-column-info -gno-variable-location-views -gz=zstd "
