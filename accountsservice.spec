@@ -5,7 +5,7 @@
 #
 Name     : accountsservice
 Version  : 23.13.9
-Release  : 25
+Release  : 26
 URL      : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Source0  : https://www.freedesktop.org/software/accountsservice/accountsservice-23.13.9.tar.xz
 Summary  : No detailed summary available
